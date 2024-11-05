@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,20 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Upload, RotateCcw } from "lucide-react"
 
 export function CoffeeCalculator() {
-  const [imageData, setImageData] = useState<string | null>(null)
   const [productCounts, setProductCounts] = useState<{ [key: string]: number[] }>({})
   const [itemCounts, setItemCounts] = useState<{ [key: string]: { initial: number; remaining: number } }>({})
   const [totalResult, setTotalResult] = useState<number | null>(null)
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImageData(reader.result as string)
-      }
-      reader.readAsDataURL(file)
-    }
+    console.log('Image upload functionality to be implemented')
   }
 
   const products = [
