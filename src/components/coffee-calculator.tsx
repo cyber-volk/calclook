@@ -35,12 +35,6 @@ export function CoffeeCalculator() {
   ]
 
   const handleGridClick = (productIndex: number, gridIndex: number) => {
-    if (typeof window !== 'undefined') {
-      document.addEventListener('touchstart', function(e) {
-        e.preventDefault();
-      }, { passive: false });
-    }
-
     setProductCounts(prevCounts => {
       const productName = products[productIndex].name;
       const newCounts = { ...prevCounts };
@@ -102,7 +96,7 @@ export function CoffeeCalculator() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-2 md:p-4 touch-manipulation">
+    <div className="min-h-screen bg-gray-50 p-2 md:p-4">
       <Card className="w-full mx-auto shadow-lg">
         <CardContent className="p-3 md:p-8">
           {/* Grid Section */}
@@ -122,8 +116,12 @@ export function CoffeeCalculator() {
                   {Array.from({ length: 100 }).map((_, i) => (
                     <div
                       key={`${index}-${i}`}
-                      onClick={() => handleGridClick(index, i)}
-                      onTouchStart={(e) => {
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleGridClick(index, i);
+                      }}
+                      onTouchEnd={(e) => {
+                        e.stopPropagation();
                         e.preventDefault();
                         handleGridClick(index, i);
                       }}
@@ -132,7 +130,6 @@ export function CoffeeCalculator() {
                         flex items-center justify-center
                         rounded-md border-2
                         cursor-pointer
-                        touch-manipulation
                         select-none
                         ${productCounts[product.name]?.includes(i)
                           ? 'bg-gray-800 border-gray-800 text-white'
