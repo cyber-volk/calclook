@@ -1,17 +1,57 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Upload, RotateCcw } from "lucide-react"
+import { Upload, RotateCcw, Save, Edit2 } from "lucide-react"
 
 export function CoffeeCalculator() {
-  const [productCounts, setProductCounts] = useState<{ [key: string]: number[] }>({})
-  const [itemCounts, setItemCounts] = useState<{ [key: string]: { initial: number; remaining: number } }>({})
-  const [totalResult, setTotalResult] = useState<number | null>(null)
+  const [isClient, setIsClient] = useState(false)
+
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  const [productCounts, setProductCounts] = useState<{ [key: string]: number[] }>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('productCounts')
+      return saved ? JSON.parse(saved) : {}
+    }
+    return {}
+  })
+
+  const [itemCounts, setItemCounts] = useState<{ [key: string]: { initial: number; remaining: number } }>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('itemCounts')
+      return saved ? JSON.parse(saved) : {}
+    }
+    return {}
+  })
+
+  const [totalResult, setTotalResult] = useState<number | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('totalResult')
+      return saved ? JSON.parse(saved) : null
+    }
+    return null
+  })
+
+  const [editingProduct, setEditingProduct] = useState<string | null>(null)
+
+  useEffect(() => {
+    localStorage.setItem('productCounts', JSON.stringify(productCounts))
+  }, [productCounts])
+
+  useEffect(() => {
+    localStorage.setItem('itemCounts', JSON.stringify(itemCounts))
+  }, [itemCounts])
+
+  useEffect(() => {
+    localStorage.setItem('totalResult', JSON.stringify(totalResult))
+  }, [totalResult])
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log('Image upload functionality to be implemented')
@@ -35,8 +75,10 @@ export function CoffeeCalculator() {
   ]
 
   const handleGridClick = (productIndex: number, gridIndex: number) => {
+    const productName = products[productIndex].name;
+    if (editingProduct !== productName) return;
+    
     setProductCounts(prevCounts => {
-      const productName = products[productIndex].name;
       const newCounts = { ...prevCounts };
       
       if (!newCounts[productName]) {
@@ -52,6 +94,8 @@ export function CoffeeCalculator() {
       
       return newCounts;
     });
+
+    setEditingProduct(null);
   };
 
   const calculateProductTotal = (productName: string) => {
@@ -93,6 +137,9 @@ export function CoffeeCalculator() {
     setProductCounts({})
     setItemCounts({})
     setTotalResult(null)
+    localStorage.removeItem('productCounts')
+    localStorage.removeItem('itemCounts')
+    localStorage.removeItem('totalResult')
   }
 
   return (
@@ -103,15 +150,33 @@ export function CoffeeCalculator() {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 mb-6">
             {products.map((product, index) => (
               <div key={index} className="space-y-2 bg-white p-2 rounded-xl shadow-sm">
-                <div className="text-center font-medium border-b border-gray-200 pb-1">
-                  <span className="text-base md:text-lg tracking-wide text-gray-800">{product.name}</span>
-                  <br />
-                  {product.price > 0 && (
+                <div className="flex items-center justify-between border-b border-gray-200 pb-1 px-1">
+                  <span className="text-gray-600 text-sm min-w-[24px]">
+                    {isClient && `(${productCounts[product.name]?.length || 0})`}
+                  </span>
+                  <span className="text-base md:text-lg font-bold text-gray-800 flex-1 text-center px-2">
+                    {product.name}
+                  </span>
+                  <button
+                    onClick={() => setEditingProduct(editingProduct === product.name ? null : product.name)}
+                    className={`
+                      p-1 rounded-md transition-colors min-w-[24px]
+                      ${editingProduct === product.name
+                        ? 'bg-green-100 text-green-600'
+                        : 'bg-gray-100 text-gray-400 hover:text-gray-600'
+                      }
+                    `}
+                  >
+                    <Edit2 className="h-3 w-3" />
+                  </button>
+                </div>
+                {product.price > 0 && (
+                  <div className="text-center">
                     <span className="text-sm font-bold text-gray-600">
                       {product.price.toLocaleString()}
                     </span>
-                  )}
-                </div>
+                  </div>
+                )}
                 <div className="grid grid-cols-5 gap-1">
                   {Array.from({ length: 100 }).map((_, i) => (
                     <div
@@ -129,11 +194,11 @@ export function CoffeeCalculator() {
                         w-5 h-5 md:w-6 md:h-6
                         flex items-center justify-center
                         rounded-md border-2
-                        cursor-pointer
                         select-none
+                        ${editingProduct === product.name ? 'cursor-pointer' : 'cursor-default'}
                         ${productCounts[product.name]?.includes(i)
                           ? 'bg-gray-800 border-gray-800 text-white'
-                          : 'border-gray-300 active:border-gray-400'
+                          : `border-gray-300 ${editingProduct === product.name ? 'hover:border-gray-400' : ''}`
                         }
                       `}
                     >
